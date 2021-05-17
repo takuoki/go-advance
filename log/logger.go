@@ -113,7 +113,7 @@ func Warn(values ...interface{}) {
 	println(LOG_LEVEL_WARN, log.Ldate|log.Ltime, "[\u001B[33mWARN\u001B[0m] ", WarnOutput, values...)
 }
 func Error(values ...interface{}) {
-	println(LOG_LEVEL_WARN, log.Ldate|log.Ltime|log.Lmicroseconds, "[\u001B[31mERROR\u001B[0m] ", ErrorOutput, values...)
+	println(LOG_LEVEL_ERROR, log.Ldate|log.Ltime|log.Lmicroseconds, "[\u001B[31mERROR\u001B[0m] ", ErrorOutput, values...)
 }
 func Emergency(values ...interface{}) {
 	fatalln(LOG_LEVEL_EMERGENCY, log.Ldate|log.Ltime|log.Lmicroseconds, "[EMERGENCY] ", EmergencyOutput, values...)
