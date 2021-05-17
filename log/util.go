@@ -37,6 +37,6 @@ func fatalln(level LogLevel, flags int, prefix string, output OutputFunc, values
 		log.Fatalln("\u001B[31m", prefix, output(values, filePath, line, name), "\x1b[0m")
 	}
 }
-func should(level2 LogLevel) bool {
-	return logLevel >= level2
+func should(level LogLevel) bool {
+	return logLevel >= level
 }
