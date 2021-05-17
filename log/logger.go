@@ -1,9 +1,7 @@
 package log
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 
@@ -15,6 +13,7 @@ type (
 	FilePath    string
 	ProgramLine int
 	MethodName  string
+	OutputFunc  func(values []interface{}, _ FilePath, line ProgramLine, name MethodName) []string
 )
 
 const (
@@ -34,6 +33,7 @@ var (
 	logLevel    = DEFAULT_LOG_LEVEL
 	skip        = DEFAULT_SKIP
 	keys        = []interface{}{}
+	SetWriter   = log.SetOutput
 	TraceOutput = func(values []interface{}, filePath FilePath, line ProgramLine, name MethodName) []string {
 		return []string{"[", string(filePath), " / ", string(name), "]: ", strings.Join(InterfacesToStrings(values), " ")}
 	}
@@ -95,151 +95,32 @@ func SetLevelOrDefault(level interface{}, defaultLevel LogLevel) {
 		SetLevel(_level)
 	}
 }
-func SetContextKey(_keys ...interface{}) {
-	for _, key := range _keys {
-		keys = append(keys, key)
-	}
-}
-func CleanContextKey() {
-	keys = []interface{}{}
-}
-func DeleteContextKey(_key interface{}) {
-	done := false
-	for !done {
-		done = true
-		for index, key := range keys {
-			if key == _key {
-				done = false
-				keys = append(keys[:index], keys[index+1:]...)
-			}
-			break
-		}
-	}
-
-}
 
 func GetLevel() LogLevel {
 	return logLevel
 }
 
 func Trace(values ...interface{}) {
-	if logLevel >= LOG_LEVEL_TRACE {
-		filePath, line, name := getInfo()
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-		log.Println("[Trace] ", TraceOutput(values, filePath, line, name))
-	}
+	println(LOG_LEVEL_TRACE, log.Ldate|log.Ltime|log.Lmicroseconds, "[TRACE] ", TraceOutput, values...)
 }
 func Debug(values ...interface{}) {
-	if logLevel >= LOG_LEVEL_DEBUG {
-		filePath, line, name := getInfo()
-		log.SetFlags(log.Ldate | log.Ltime)
-		log.Println("[DEBUG] ", DebugOutput(values, filePath, line, name))
-	}
+	println(LOG_LEVEL_DEBUG, log.Ldate|log.Ltime, "[DEBUG] ", DebugOutput, values...)
 }
 func Info(values ...interface{}) {
-	if logLevel >= LOG_LEVEL_INFO {
-		filePath, line, name := getInfo()
-		log.SetFlags(log.Ldate | log.Ltime)
-		log.Println("[INFO] ", InfoOutput(values, filePath, line, name))
-	}
+	println(LOG_LEVEL_INFO, log.Ldate|log.Ltime, "[INFO] ", InfoOutput, values...)
 }
 func Warn(values ...interface{}) {
-	if logLevel >= LOG_LEVEL_WARN {
-		filePath, line, name := getInfo()
-		log.SetFlags(log.Ldate | log.Ltime)
-		log.Println("[\u001B[33mWARN\u001B[0m] ", WarnOutput(values, filePath, line, name))
-	}
+	println(LOG_LEVEL_WARN, log.Ldate|log.Ltime, "[\u001B[33mWARN\u001B[0m] ", WarnOutput, values...)
 }
 func Error(values ...interface{}) {
-	if logLevel >= LOG_LEVEL_ERROR {
-		filePath, line, name := getInfo()
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-		log.Println("[\u001B[31mERROR\u001B[0m] ", ErrorOutput(values, filePath, line, name))
-	}
+	println(LOG_LEVEL_WARN, log.Ldate|log.Ltime|log.Lmicroseconds, "[\u001B[31mERROR\u001B[0m] ", ErrorOutput, values...)
 }
 func Emergency(values ...interface{}) {
-	if logLevel >= LOG_LEVEL_EMERGENCY {
-		filePath, line, name := getInfo()
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-		log.Println("\u001B[31m[EMERGENCY] ", EmergencyOutput(values, filePath, line, name), "\x1b[0m")
-	}
+	fatalln(LOG_LEVEL_EMERGENCY, log.Ldate|log.Ltime|log.Lmicroseconds, "[EMERGENCY] ", EmergencyOutput, values...)
 }
 func Disrupt(values ...interface{}) {
-	if logLevel >= LOG_LEVEL_DISRUPT {
-		filePath, line, name := getInfo()
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-		log.Println("\u001B[31m[DISRUPT] ", DisruptOutput(values, filePath, line, name), "\u001B[0m")
-	}
+	fatalln(LOG_LEVEL_DISRUPT, log.Ldate|log.Ltime|log.Lmicroseconds, "[DISRUPT] ", DisruptOutput, values...)
 }
 func Fatal(values ...interface{}) {
-	if logLevel >= LOG_LEVEL_FATAL {
-		filePath, line, name := getInfo()
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-		log.Fatalln("\u001B[31m[FATAL] ", FatalOutput(values, filePath, line, name), "\x1b[0m")
-	}
-}
-
-func TraceCtx(ctx context.Context, values ...interface{}) {
-	if logLevel >= LOG_LEVEL_TRACE {
-		filePath, line, name := getInfo()
-		prefix := getContextValues(ctx, keys)
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-		log.Println("[Trace] ", fmt.Sprintf("(%s)", prefix), TraceOutput(values, filePath, line, name))
-	}
-}
-func DebugCtx(ctx context.Context, values ...interface{}) {
-	if logLevel >= LOG_LEVEL_DEBUG {
-		filePath, line, name := getInfo()
-		prefix := getContextValues(ctx, keys)
-		log.SetFlags(log.Ldate | log.Ltime)
-		log.Println("[DEBUG]", fmt.Sprintf("(%s)", prefix), DebugOutput(values, filePath, line, name))
-	}
-}
-func InfoCtx(ctx context.Context, values ...interface{}) {
-	if logLevel >= LOG_LEVEL_INFO {
-		filePath, line, name := getInfo()
-		prefix := getContextValues(ctx, keys)
-		log.SetFlags(log.Ldate | log.Ltime)
-		log.Println("[INFO]", fmt.Sprintf("(%s)", prefix), InfoOutput(values, filePath, line, name))
-	}
-}
-func WarnCtx(ctx context.Context, values ...interface{}) {
-	if logLevel >= LOG_LEVEL_WARN {
-		filePath, line, name := getInfo()
-		prefix := getContextValues(ctx, keys)
-		log.SetFlags(log.Ldate | log.Ltime)
-		log.Println("[\u001B[33mWARN\u001B[0m] ", fmt.Sprintf("(%s)", prefix), WarnOutput(values, filePath, line, name))
-	}
-}
-func ErrorCtx(ctx context.Context, values ...interface{}) {
-	if logLevel >= LOG_LEVEL_ERROR {
-		filePath, line, name := getInfo()
-		prefix := getContextValues(ctx, keys)
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-		log.Println("[\u001B[31mERROR\u001B[0m] ", fmt.Sprintf("(%s)", prefix), ErrorOutput(values, filePath, line, name))
-	}
-}
-func EmergencyCtx(ctx context.Context, values ...interface{}) {
-	if logLevel >= LOG_LEVEL_EMERGENCY {
-		filePath, line, name := getInfo()
-		prefix := getContextValues(ctx, keys)
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-		log.Println("\u001B[31m[EMERGENCY] ", fmt.Sprintf("(%s)", prefix), EmergencyOutput(values, filePath, line, name), "\x1b[0m")
-	}
-}
-func FatalCtx(ctx context.Context, values ...interface{}) {
-	if logLevel >= LOG_LEVEL_FATAL {
-		filePath, line, name := getInfo()
-		prefix := getContextValues(ctx, keys)
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-		log.Println("\u001B[31m[FATAL] ", fmt.Sprintf("(%s)", prefix), FatalOutput(values, filePath, line, name), "\x1b[0m")
-	}
-}
-func DisruptCtx(ctx context.Context, values ...interface{}) {
-	if logLevel >= LOG_LEVEL_DISRUPT {
-		filePath, line, name := getInfo()
-		prefix := getContextValues(ctx, keys)
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-		log.Println("\u001B[31m[DISRUPT] ", fmt.Sprintf("(%s)", prefix), DisruptOutput(values, filePath, line, name), "\u001B[0m")
-	}
+	println(LOG_LEVEL_FATAL, log.Ldate|log.Ltime|log.Lmicroseconds, "[FATAL] ", FatalOutput, values...)
 }

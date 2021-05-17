@@ -1,13 +1,11 @@
 package log
 
 import (
-	"context"
-	"fmt"
+	"log"
 	"path/filepath"
 	"runtime"
 	"strconv"
 
-	"github.com/fcfcqloow/go-advance/check"
 	cnv "github.com/fcfcqloow/go-advance/convert"
 )
 
@@ -24,17 +22,21 @@ func getInfo() (FilePath, ProgramLine, MethodName) {
 	return FilePath(file + ":" + strconv.Itoa(line)), ProgramLine(line), MethodName(filepath.Base(runtime.FuncForPC(pt).Name()))
 }
 
-func getContextValue(ctx context.Context, key interface{}) string {
-	value := ctx.Value(key)
-	if check.IsNil(value) {
-		return fmt.Sprintf("%s: ", cnv.MustStr(key))
+func println(level LogLevel, flags int, prefix string, output OutputFunc, values ...interface{}) {
+	if should(level) {
+		filePath, line, name := getInfo()
+		log.SetFlags(flags)
+		log.SetPrefix(prefix)
+		log.Println(output(values, filePath, line, name))
 	}
-	return fmt.Sprintf("%s: %s", cnv.MustStr(key), cnv.MustStr(value))
-
 }
-func getContextValues(ctx context.Context, keys []interface{}) (result string) {
-	for _, key := range keys {
-		result += getContextValue(ctx, key) + ", "
+func fatalln(level LogLevel, flags int, prefix string, output OutputFunc, values ...interface{}) {
+	if should(level) {
+		filePath, line, name := getInfo()
+		log.SetFlags(flags)
+		log.Fatalln("\u001B[31m", prefix, output(values, filePath, line, name), "\x1b[0m")
 	}
-	return
+}
+func should(level2 LogLevel) bool {
+	return logLevel >= level2
 }
