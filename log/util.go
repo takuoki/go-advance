@@ -30,6 +30,7 @@ func println(level LogLevel, flags int, prefix string, output OutputFunc, values
 		log.Println(output(values, filePath, line, name))
 	}
 }
+
 func fatalln(level LogLevel, flags int, prefix string, output OutputFunc, values ...interface{}) {
 	if should(level) {
 		filePath, line, name := getInfo()
@@ -37,6 +38,7 @@ func fatalln(level LogLevel, flags int, prefix string, output OutputFunc, values
 		log.Fatalln("\u001B[31m", prefix, output(values, filePath, line, name), "\x1b[0m")
 	}
 }
+
 func should(level LogLevel) bool {
 	return logLevel >= level
 }
