@@ -56,6 +56,37 @@ func (self *String) Copy() *String {
 func (self *String) ChatAt(index int) Char {
 	return Char(self.AsPrimitive()[index])
 }
+
+func (self *String) Clean() *String {
+	*self = ""
+	return self
+}
+func (self *String) Concat(arg *String) *String {
+	return self.AddAll(arg.AsPrimitive())
+}
+func (self *String) ConcatHead(arg *String) *String {
+	return self.AddAllHead(arg.AsPrimitive())
+}
+func (self *String) Contains(str string) bool {
+	return strings.Contains(self.AsPrimitive(), str)
+}
+func (self *String) ContainsSome(str ...string) bool {
+	for _, v := range str {
+		if self.Contains(v) {
+			return true
+		}
+	}
+	return false
+}
+func (self *String) ContainsAll(str ...string) bool {
+	for _, v := range str {
+		if !self.Contains(v) {
+			return false
+		}
+
+	}
+	return true
+}
 func (self *String) Default(str string) *String {
 	if self.IsEmpty() {
 		*self = String(str)
@@ -86,42 +117,18 @@ func (self *String) DeleteAll(str string) *String {
 	*self = String(strings.ReplaceAll(self.AsPrimitive(), str, ""))
 	return self
 }
+func (self *String) DeletesAll(str ...string) *String {
+	for _, v := range str {
+		self.DeleteAll(v)
+	}
+	return self
+}
 func (self *String) DeletePattern(str string) *String {
 	*self = String(regexp.MustCompile(str).ReplaceAllString(self.AsPrimitive(), ""))
 	return self
 }
 func (self *String) Equals(target string) bool {
 	return self.AsPrimitive() == target
-}
-func (self *String) Clean() *String {
-	*self = ""
-	return self
-}
-func (self *String) Concat(arg *String) *String {
-	return self.AddAll(arg.AsPrimitive())
-}
-func (self *String) ConcatHead(arg *String) *String {
-	return self.AddAllHead(arg.AsPrimitive())
-}
-func (self *String) Contains(str string) bool {
-	return strings.Contains(self.AsPrimitive(), str)
-}
-func (self *String) ContainsSome(str ...string) bool {
-	for _, v := range str {
-		if self.Contains(v) {
-			return true
-		}
-	}
-	return false
-}
-func (self *String) ContainsAll(str ...string) bool {
-	for _, v := range str {
-		if !self.Contains(v) {
-			return false
-		}
-
-	}
-	return true
 }
 func (self *String) EndWith(str string) bool {
 	return strings.HasSuffix(self.AsPrimitive(), str)
