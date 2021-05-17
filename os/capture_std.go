@@ -16,7 +16,7 @@ func CaptureStdout(fn func()) (buffer bytes.Buffer) {
 
 func capture(std *os.File, fn func()) (buffer bytes.Buffer) {
 	w, r, e := os.Pipe()
-	if e == nil {
+	if e != nil {
 		panic(e)
 	}
 	switch std {
